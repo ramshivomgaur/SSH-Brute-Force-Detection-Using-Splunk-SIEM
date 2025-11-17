@@ -1,160 +1,123 @@
 # SSH-Brute-Force-Detection-Using-Splunk-SIEM
 A Hands-On Cybersecurity Project
+
 📌 Overview
 
-This project demonstrates how to detect an SSH brute-force attack using Splunk SIEM in a controlled, virtualized cybersecurity lab.
+This project demonstrates how to detect an SSH brute-force attack using Splunk SIEM.
+A virtual cybersecurity lab was created using:
 
-The setup includes:
+Splunk Enterprise (SIEM Server)
 
-A Splunk Enterprise server
+Linux machine (Log Source / SSH Target)
 
-A Linux machine acting as a log source (victim)
+Kali Linux (Attacker using Hydra)
 
-A Kali Linux machine acting as an attacker
-
-The goal is to simulate a real brute-force attack, forward logs to Splunk, and analyze/detect malicious behavior.
+The goal was to simulate an attack, forward logs, and detect malicious activity using SPL queries.
 
 🎯 Objectives
 
-Configure Splunk Enterprise as a SIEM
+Configure Splunk to receive logs from a Linux host
 
-Forward system authentication logs from a Linux machine
+Forward authentication logs via Splunk Universal Forwarder
 
-Simulate SSH brute-force attacks using Hydra
+Simulate SSH brute-force attempts
 
-Detect suspicious activity using Splunk SPL queries
+Detect failed login events using SPL
 
-Build a mini SOC-style analysis workflow
+Build a real SOC-style detection workflow
 
-🏗️ Architecture Diagram
-+--------------------+        Log Forwarding        +-----------------------+
-| Linux Machine      | ---------------------------> | Splunk Enterprise     |
-| (Victim)           |        (Syslogs/Auth Logs)   | (SIEM Server)         |
-+--------------------+                               +-----------------------+
-          ^                                                     |
-          | SSH Brute-Force Attack                              |
-          |                                                     |
-+--------------------+                                          |
-| Kali Linux         | ------------------------------------------ 
-| (Attacker)         | Hydra SSH attack tool                     
-+--------------------+                                          
+🏗️ Architecture
+Linux Machine (Victim) → Splunk Enterprise (SIEM)
+        ↑
+        └────── Kali Linux (Attacker using Hydra)
 
+🛠️ Lab Setup Summary
+✔ VirtualBox Networking
 
-NOTE: All IP addresses and credentials used in the real setup are intentionally omitted.
+Host-Only Adapter → internal lab network
 
-⚙️ Technologies Used
+NAT Adapter → Internet access
 
-Splunk Enterprise
+✔ Splunk Enterprise (Server)
 
-Splunk Universal Forwarder
-
-Linux (log source)
-
-Kali Linux (attack simulation)
-
-Hydra (SSH brute-force tool)
-
-VirtualBox (virtual lab environment)
-
-SSH (OpenSSH server)
-
-🛠️ Setup & Configuration Summary
-🔹 1. Configure Virtualization Networking
-
-Host-Only Adapter – internal lab network
-
-NAT Adapter – Internet access
-
-This ensures isolated lab communication while allowing tool installation.
-
-🔹 2. Install and Configure Splunk Enterprise
+Installed Splunk Enterprise
 
 Enabled receiving on a dedicated port
 
 Created a custom index for SSH logs
 
-Splunk was prepared to ingest logs from remote machines.
+✔ Linux Machine (Victim)
 
-🔹 3. Install Splunk Universal Forwarder on Linux
+Installed Splunk Universal Forwarder
 
-Added Splunk server as a forwarding target
+Configured to forward /var/log/auth.log
 
-Configured monitoring of auth.log (SSH authentication events)
+Enabled and started OpenSSH server
 
-Verified forwarding status via CLI
+✔ Kali Linux (Attacker)
 
-The log source was successfully connected to Splunk.
+Installed Hydra
 
-🔹 4. Enable SSH Server on Linux (Victim)
+Created username & password lists
 
-Installed and enabled OpenSSH
+Launched SSH brute-force attempts
 
-Confirmed SSH port was listening
+🔥 Attack Simulation
 
-This machine became the target of the simulated attack.
+Hydra was used to generate SSH brute-force attempts:
 
-🔹 5. Simulate SSH Brute-Force Attack (Kali)
-
-Created username and password wordlists
-
-Used Hydra to attempt SSH brute-force
-
-Generated real failed login attempts
-
-All attempts were captured inside the victim’s authentication log.
-
-🔹 6. Analyze Events in Splunk
-
-Used SPL searches to detect:
-
-Failed login attempts
-
-Repeated authentication failures
-
-Possible brute-force patterns
-
-Usernames and source IPs involved
-
-Examples:
-
-search index=* "Failed password"
+hydra -L users.txt -P passwords.txt -t 4 -V <target-ip> ssh
 
 
-More advanced detection:
+These attempts created:
 
+Failed login events
+
+Multiple username trials
+
+Authentication errors
+
+All captured in the victim’s auth logs.
+
+🕵️ Detection in Splunk
+Basic search:
+"Failed password"
+
+Extract attacker IP & username:
 "Failed password"
 | rex "from (?<src_ip>\d+\.\d+\.\d+\.\d+).* for (?<user>\S+)"
-| stats count AS attempts by src_ip user
+| stats count by src_ip user
+
+Brute-force behavior detection:
+"Failed password"
+| stats count AS attempts by src_ip
+| where attempts > 10
 
 📊 Results
 
-SSH brute-force attempts were successfully simulated
+Brute-force attempts successfully simulated
 
-Syslog authentication events were sent to Splunk
+Linux logs forwarded to Splunk
 
-Splunk SIEM identified repeated failed logins
+Splunk visualized failed logins
 
-Attack patterns (e.g., high-frequency failures) were clearly visible
+Attack patterns were clearly identified
 
-The environment functioned like a real SOC detection scenario
+🧠 Skills Demonstrated
 
-🧠 Skills Gained
+SIEM configuration (Splunk)
 
-Security Monitoring & Log Analysis
+Linux log analysis
 
-SIEM Deployment (Splunk)
+Attack simulation
 
-Linux Security & SSH Hardening Concepts
+Threat detection
 
-Threat Detection
+SOC investigation workflow
 
-Brute-Force Attack Simulation
-
-Virtual Networking Configuration
-
-Incident Investigation Workflow
+Virtual networking
 
 🏁 Conclusion
 
-This hands-on project successfully demonstrates how Splunk SIEM can detect brute-force attacks by analyzing real authentication logs.
-It serves as an excellent practical exercise for SOC analysts, cybersecurity students, and security enthusiasts.
+This project replicates a real SOC detection scenario by combining log forwarding, brute-force simulation, and analysis using Splunk.
+It showcases strong practical cybersecurity and SIEM skills.
